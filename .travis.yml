@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t xclusiveravi/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true xclusiveravi/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t xclusiveravi/multi-docker-client ./client
+  - docker build -t xclusiveravi/multi-docker-server ./server
+  - docker build -t xclusiveravi/multi-docker-worker ./worker
+  - docker build -t xclusiveravi/multi-docker-nginx  ./nginx
+  # Login into docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to dockerhub
+  - docker push xclusiveravi/multi-docker-client
+  - docker push xclusiveravi/multi-docker-server
+  - docker push xclusiveravi/multi-docker-worker
+  - docker push xclusiveravi/multi-docker-nginx
